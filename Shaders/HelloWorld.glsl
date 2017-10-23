@@ -4,8 +4,11 @@ uniform vec2 iResolution; //[xResolution, yResolution] of display
 uniform float iGlobalTime; //global time in seconds as float
 uniform vec3 iMouse; //[xPosMouse, yPosMouse, isLeftMouseButtonClicked]
 	
+vec3 giveTriangle(vec2, float);
+float random(float);
 float select(float, float, float);
 vec3 giveStraightLine(float, float, float, vec2);
+vec3 giveGridOfRandomTriangles(float, int, int, vec2);
 vec3 giveGridOfRectangles(vec2, vec3, vec2, vec2, int, int);
 vec3 giveRectangleAt(vec2, vec2, vec3, vec2);
 vec3 giveSmoothRectangleAt(vec2, vec2, float, float, vec3, vec2);
@@ -60,7 +63,7 @@ void main()
 	
 	*/
 
-	
+	/*
 	int rectsInX = 5;
 	int rectsInY = 5;
 
@@ -70,7 +73,22 @@ void main()
 	color.rgb = giveGridOfRectangles(vec2(.7), vec3(1, 1, 1), vec2(uv.x, uv.y), vec2(xShift, yShift), rectsInX, rectsInY);
 
 	color.rgba *= vec4(uv, 0, 1);
+	*/
+
+	/*
+	float rand = random(5) * 4;
+
+	//color.rgb = vec3(rand);
+
+	color.rgb = giveTriangle(uv, rand);
+
+	//color.rgb = vec3(step(rand, uv.x));
+
+	//color.rgb = giveRectangleAt(vec2(0), vec2(1), vec3(rand), uv);
+	*/
 	
+	color.rgb = giveGridOfRandomTriangles(0, 5, 5, uv);
+
 
 	//color.rgb = giveSmoothRectangleAt(vec2(0), vec2(.3f), vec2(.3f), vec3(1,0,0), uv);
 
@@ -92,6 +110,26 @@ void main()
 
 }
 
+vec3 giveTriangle(vec2 position, float type) {
+
+	/*
+	//Function					     // Left Top Right Bottom
+	step(position.x, position.y);    // W	 W	 B     B
+	step(position.y, position.x);    // B    B   W     W
+	step(1 - position.x, position.y) // B    W   W     B
+	step(1 - position.y, position.x) // W    B   B     W
+	*/
+
+	return step(position.x, position.y) * select(0, 1, type) + \
+		   step(position.y, position.x) * select(1, 2, type) + \
+		   step(1 - position.x, position.y) * select(2, 3, type) + \
+		   step(position.x, 1 - position.y) * select(3, 4, type);
+}
+
+float random(float seed) {
+	return fract(sin(seed * 314720.91723) * 7146502.7692);
+}
+
 
 vec3 giveStraightLine(float startHeight, float steigung, float thickness, vec2 position) {
 	
@@ -100,6 +138,15 @@ vec3 giveStraightLine(float startHeight, float steigung, float thickness, vec2 p
 
 
 	return vec3(step(thickness, distanceMidToPos) * vec3(1, 0, 0));
+}
+
+vec3 giveGridOfRandomTriangles(float seed, int rectsInX, int rectsInY, vec2 position) {
+	float type = random(seed + floor(rectsInX * position.x) * rectsInX + floor(rectsInY * position.y)) * 4;
+	
+	position.x *= rectsInX;
+	position.y *= rectsInY;
+
+	return giveTriangle(fract(position), type);
 }
 
 vec3 giveGridOfRectangles(vec2 size, vec3 colour, vec2 position, vec2 shift, int rectsInX, int rectsInY) {
