@@ -87,7 +87,7 @@ void main()
 	//color.rgb = giveRectangleAt(vec2(0), vec2(1), vec3(rand), uv);
 	*/
 	
-	color.rgb = giveGridOfRandomTriangles(0, 5, 5, uv);
+	color.rgb = giveGridOfRandomTriangles(floor(iGlobalTime), 5, 5, uv);
 
 
 	//color.rgb = giveSmoothRectangleAt(vec2(0), vec2(.3f), vec2(.3f), vec3(1,0,0), uv);
@@ -120,10 +120,10 @@ vec3 giveTriangle(vec2 position, float type) {
 	step(1 - position.y, position.x) // W    B   B     W
 	*/
 
-	return step(position.x, position.y) * select(0, 1, type) + \
+	return vec3(step(position.x, position.y) * select(0, 1, type) + \
 		   step(position.y, position.x) * select(1, 2, type) + \
 		   step(1 - position.x, position.y) * select(2, 3, type) + \
-		   step(position.x, 1 - position.y) * select(3, 4, type);
+		   step(position.x, 1 - position.y) * select(3, 4, type));
 }
 
 float random(float seed) {
