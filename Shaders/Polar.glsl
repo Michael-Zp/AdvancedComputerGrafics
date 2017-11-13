@@ -29,6 +29,11 @@ vec3 sinusWithPolar(float radius, float thickness, vec2 polarPosition)
 	return vec3(smoothstep(0, thickness, abs(radius + .05 * sin(16 * polarPosition.y) - polarPosition.x)));
 }
 
+vec3 everythingSmallerThanSinusWithPolar(float radius, vec2 polarPosition)
+{
+	return vec3(step(polarPosition.x, abs(radius + .2 * sin(8 * polarPosition.y))));
+}
+
 void main()
 {
 	//create uv to be in the range [0..1]x[0..1]
@@ -50,7 +55,11 @@ void main()
 
 	//color.rgb = circleWithPolar(.25, .05, polar);
 
-	color.rgb = sinusWithPolar(.5, .05, polar);
+	//color.rgb = sinusWithPolar(.5, .05, polar);
+
+	color.rgb = everythingSmallerThanSinusWithPolar(.5, polar);
+	color.rgb *= vec3(1 - step(.54, polar.x));
+	color.rgb += vec3(1 - step(.45, polar.x));
 
 
 	gl_FragColor = color;
