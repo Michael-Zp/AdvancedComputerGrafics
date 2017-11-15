@@ -9,39 +9,58 @@ uniform vec2 iResolution; //[xResolution, yResolution] of display
 uniform float iGlobalTime; //global time in seconds as float
 uniform vec3 iMouse; //[xPosMouse, yPosMouse, isLeftMouseButtonClicked]
 
+
+const vec3 ambientLight = vec3(.1);
 struct LightSource 
 {
 	vec3 position;
 	vec3 color;
 };
 
-struct Material {
+struct Material
+{
 	vec3 color;
 	float shininess;
 };
 
-struct Ray {
+struct Ray 
+{
 	vec3 origin;
 	vec3 direction;
 };
 
-struct Triangle {
-	struct Material mat;
+const int TriangleType = 0;
+struct Triangle 
+{
+	int mat;
 	vec3 pointA;
 	vec3 pointB;
 	vec3 pointC;
 };
 
-struct Plane {
-	struct Material mat;
+const int PlaneType = 1;
+struct Plane 
+{
+	int mat;
 	vec3 normal;
 	float dist;
 };
 
-struct Sphere {
-	struct Material mat;
+const int SphereType = 2;
+struct Sphere 
+{
+	int mat;
 	vec3 center;
 	float radius;
+};
+
+struct RayCastSolution 
+{
+	int mat;
+	int type;
+	float dist;
+	int index;
+	vec3 normal;
 };
 
 bool rayCastTriangle(struct Ray ray, struct Triangle triangle, out vec3 hit) 
@@ -85,8 +104,8 @@ float rayCastPlane(struct Plane plane, struct Ray ray)
 	float denom = dot(plane.normal, ray.direction);
 	if(abs(denom) < 0.01)
 	{
-	//no intersection
-	return -10000000000.;
+		//no intersection
+		return -10000000000.;
 	}
 	return (-plane.dist - dot(plane.normal, ray.origin)) / denom;
 }
@@ -132,29 +151,31 @@ float findNearestSolutionOfRaycast(vec2 solutions)
 	return nearestSolution;
 }
 
-bool isInShadow(vec3 hitPoint, vec3 lightSourcePosition, struct Sphere[4] spheres, int currentSphere) 
+#define SPHERE_COUNT 4
+#define PLANE_COUNT 1
+#define MATERIAL_COUNT 5
+
+bool isInShadow(vec3 shadowPoint, vec3 lightSourcePosition, struct Sphere[SPHERE_COUNT] spheres) 
 {
-	vec3 sphereNormal = hitPoint - spheres[currentSphere].center;
-	vec3 shadowPoint = hitPoint + sphereNormal * .01f;
-	vec3 pointToLight = shadowPoint - lightSourcePosition;
+	vec3 pointToLight = normalize(lightSourcePosition - shadowPoint);
 	struct Ray ray = struct Ray(shadowPoint, pointToLight);
 
-	for(int i = 0; i < 4; i++)
+	for(int i = 0; i < SPHERE_COUNT; i++)
 	{
 		vec2 solutions = rayCastSphere(spheres[i], ray);
 
 		if(solutions.x > 0 || solutions.y > 0) 
 		{
-			return false;
+			return true;
 		}
 	}
-	return true;
+	return false;
 }
 
-vec3 spheresWithLightning(struct Sphere[4] spheres, struct Ray ray, struct LightSource lightSource) 
+vec3 spheresWithLightning(struct Sphere[SPHERE_COUNT] spheres, vec3 ambientLight, struct Ray ray, struct LightSource lightSource, struct Material mat) 
 {
 	vec3 returns;
-	for(int i = 0; i < 4; i++) 
+	for(int i = 0; i < SPHERE_COUNT; i++) 
 	{
 		vec2 solutions = rayCastSphere(spheres[i], ray);
 
@@ -163,19 +184,57 @@ vec3 spheresWithLightning(struct Sphere[4] spheres, struct Ray ray, struct Light
 		float hitSphere = step(0.0000001, nearestSolution);
 		vec3 hitPoint = ray.origin + ray.direction * nearestSolution;
 
-		returns += hitSphere * GetColorOfSphere(lightSource, spheres[i], ray, hitPoint);
-		
-		if(hitSphere == 1) 
-		{
-			if(isInShadow(hitPoint, lightSource.position, spheres, i))
-			{
-				returns = vec3(1, 1, 1);
-			}
-		}
-
+		returns += hitSphere * GetColorOfSphere(lightSource, ambientLight, spheres[i], ray, hitPoint, mat);
 	}
 
 	return returns;
+}
+
+struct RayCastSolution rayCastAll(struct Sphere[SPHERE_COUNT] spheres, struct Plane[PLANE_COUNT] planes, struct Ray ray) 
+{
+	struct RayCastSolution solution;
+
+	float sphereDistance = 10000000;
+	for(int i = 0; i < SPHERE_COUNT; i++) 
+	{
+		vec2 solutions = rayCastSphere(spheres[i], ray);
+
+		float tempNearestSol = findNearestSolutionOfRaycast(solutions);
+
+		if(tempNearestSol < sphereDistance && tempNearestSol > 0) 
+		{
+			sphereDistance = tempNearestSol;
+			solution.mat = spheres[i].mat;
+			solution.index = i;
+		}
+	}
+
+	float planeDistance = rayCastPlane(planes[0], ray);
+
+	float hitPlane = step(0.0000001, planeDistance);
+	float hitSphere = step(0.0000001, sphereDistance);
+
+	if(planeDistance < sphereDistance && hitPlane == 1) 
+	{
+		solution.type = PlaneType;
+		solution.dist = planeDistance;
+		solution.index = 0;
+		solution.normal = planes[solution.index].normal;
+	}
+	else if(hitSphere == 1 && sphereDistance != 10000000) 
+	{
+		solution.type = SphereType;
+		solution.dist = sphereDistance;
+		vec3 hitPoint = ray.origin + ray.direction * sphereDistance;
+		solution.normal = normalize(hitPoint - spheres[solution.index].center);
+	}
+	else 
+	{
+		solution.type = -1;
+		solution.dist = -10000000;
+	}
+
+	return solution;
 }
 
 
@@ -201,12 +260,12 @@ void main()
 	vec4 color = vec4(uv, 0, 1);
 	
 	float fov = .1 * PI;
-	struct Ray ray = GetCameraRay(vec3(0), fov, gl_FragCoord.xy, iResolution);
-
+	struct Ray ray = GetCameraRay(vec3(0, 2, 0), fov, gl_FragCoord.xy, iResolution);
+	
 	struct LightSource lightSource;
-	lightSource.position = vec3(0, 10, 30); 
-	lightSource.color = vec3(.4);
-
+	lightSource.position = vec3(-10, 10, 0); 
+	lightSource.color = vec3(1);
+	 
 	
 	/*
 	//Triangle
@@ -237,39 +296,80 @@ void main()
 	*/
 
 	//color.rgb = abs(ray.direction);
+	
+	struct Material[MATERIAL_COUNT] materials;
+	materials[0] = struct Material(vec3(1), 8f);
+	materials[1] = struct Material(vec3(1, 0, 0), 8f);
+	materials[2] = struct Material(vec3(0, 1, 0), 8f);
+	materials[3] = struct Material(vec3(0, 0, 1), 8f);
+	materials[4] = struct Material(vec3(1, 0, 1), 8f);
 
+	struct Plane plane1;
+	plane1.dist = 0;
+	plane1.normal = normalize(vec3(0, 1, 0));
+	plane1.mat = 0;
+	
+
+	struct Plane[PLANE_COUNT] planes;
+	planes[0] = plane1;
 
 	//Sphere
 	struct Sphere sphere1;
-	sphere1.center = vec3(-3, 0, 30);
+	sphere1.center = vec3(0, 1, 20);
 	sphere1.radius = .6f;
-	sphere1.mat = struct Material(vec3(1, 0, 0), 8f);
+	sphere1.mat = 1;
 
 	struct Sphere sphere2;
-	sphere2.center = vec3(0, 1, 30);
+	sphere2.center = vec3(-1, 1, 22.5);
 	sphere2.radius = .6f;
-	sphere2.mat = struct Material(vec3(0, 1, 0), 8f);
+	sphere2.mat = 2;
 	
 	struct Sphere sphere3;
-	sphere3.center = vec3(3, 0, 30);
+	sphere3.center = vec3(0, 1, 25);
 	sphere3.radius = .6f;
-	sphere3.mat = struct Material(vec3(0, 0, 1), 8f);
+	sphere3.mat = 3;
 
+	
 	struct Sphere sphere4;
-	sphere4.center = vec3(1, -1.5, 30);
+	sphere4.center = vec3(1, 1, 22.5);
 	sphere4.radius = .6f;
-	sphere4.mat = struct Material(vec3(1, 0, 1), 8f);
+	sphere4.mat = 4;
+	
 
-	struct Sphere[4] spheres;
+	struct Sphere[SPHERE_COUNT] spheres;
 	spheres[0] = sphere1;
 	spheres[1] = sphere2;
 	spheres[2] = sphere3;
 	spheres[3] = sphere4;
+
+
+	struct RayCastSolution solution = rayCastAll(spheres, planes, ray);
+	vec3 hitPoint = ray.origin + ray.direction * solution.dist;
+
+	switch(solution.type) {
+		case TriangleType:
+			break;
+
+		case PlaneType:
+			color.rgb = materials[solution.mat].color;
+			break;
+
+		case SphereType:
+			color.rgb = GetColorOfSphere(lightSource, ambientLight, spheres[solution.index], ray, hitPoint, materials[solution.mat]);
+			break;
+
+		default:
+			color.rgb = vec3(0);
+	}
 	
-	color.rgb = spheresWithLightning(spheres, ray, lightSource);
-	//color.rgb += sphereWithLightning(sphere2, ray, lightSource);
-	//color.rgb += sphereWithLightning(sphere3, ray, lightSource);
-	//color.rgb += sphereWithLightning(sphere4, ray, lightSource);
+	vec3 shadowPoint = hitPoint + 0.001f * solution.normal;
+
+	float hasSolution = step(0.00001f, solution.dist);
+	bool bIsInShadow = isInShadow(shadowPoint, lightSource.position, spheres);
+
+	color.rgb = hasSolution * (bIsInShadow ? ambientLight : color.rgb)
+				+ (1 - hasSolution) * vec3(0f);
+
 
 
 	
