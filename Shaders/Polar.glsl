@@ -26,12 +26,21 @@ vec3 circleWithPolar(float radius, float thickness, vec2 polarPosition)
 
 vec3 sinusWithPolar(float radius, float thickness, vec2 polarPosition) 
 {
-	return vec3(smoothstep(0, thickness, abs(radius + .05 * sin(16 * polarPosition.y) - polarPosition.x)));
+	return vec3(step(thickness, abs(radius + .2 * sin(16* polarPosition.y) - polarPosition.x)));
 }
 
-vec3 everythingSmallerThanSinusWithPolar(float radius, vec2 polarPosition)
+vec3 cogwheel(float innerRadius, float teethHeight, int teethCount, vec2 polarPosition)
 {
-	return vec3(step(polarPosition.x, abs(radius + .2 * sin(8 * polarPosition.y))));
+	/*
+	if (innerRadius + teethHeight < polarPosition.x) {
+		return vec3(1);
+	}
+	if (innerRadius + teethHeight - .1 > polarPosition.x) {
+		return vec3(0);
+	}
+	*/
+	return vec3(1 - step(polarPosition.x, innerRadius + teethHeight * sin(8 * polarPosition.y)) \
+	       * (1 -step(innerRadius, polarPosition.x )));
 }
 
 void main()
@@ -45,6 +54,8 @@ void main()
 	uv -= .5;
 	uv *= 2;
 
+	
+
 	//color.rgb = vec3(atan(uv.y, uv.x), abs(atan(uv.y, uv.x)), 1);
 
 	vec2 polar = vec2(length(uv), atan(uv.y, uv.x));
@@ -55,12 +66,9 @@ void main()
 
 	//color.rgb = circleWithPolar(.25, .05, polar);
 
-	//color.rgb = sinusWithPolar(.5, .05, polar);
+	//color.rgb = sinusWithPolar(.5, .1, polar);
 
-	color.rgb = everythingSmallerThanSinusWithPolar(.5, polar);
-	color.rgb *= vec3(1 - step(.54, polar.x));
-	color.rgb += vec3(1 - step(.45, polar.x));
+	color.rgb = cogwheel(.7, .2, 16, polar);
 
 
 	gl_FragColor = color;
-}
