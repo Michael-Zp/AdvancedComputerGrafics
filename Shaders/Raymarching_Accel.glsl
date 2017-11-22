@@ -10,25 +10,6 @@ uniform sampler2D tex0; //Texture
 
 #define PI 3.1415
 
-struct Ray 
-{
-	vec3 origin;
-	vec3 direction;
-};
-
-
-struct Ray GetCameraRay(vec3 origin, float fov, vec2 pos, vec2 resolution) 
-{
-	//Camera Ray
-	struct Ray ray;
-	float fx = tan(fov / 2) / resolution.x;
-	vec2 d = (2 * pos - resolution) * fx;
-	ray.direction = normalize(vec3(d, 1));
-	ray.origin = origin;
-	return ray;
-}
-
-
 
 void main()
 {
@@ -38,46 +19,75 @@ void main()
 	//4 component color red, green, blue, alpha
 	vec4 color = vec4(texture(tex0, uv).rgb, 1);
 	
-	vec2 txtSize = textureSize(tex0, 2);
-	float xSize = 1 / txtSize.x;
-	float ySize = 1 / txtSize.y;
+	//vec2 txtSize = textureSize(tex0, 0);
+	const vec2 txtSize = vec2(256, 256);
+	const float maxHeight = 1;
+	const float xSize = 1 / txtSize.x;
+	const float ySize = 1 / txtSize.y;
 
 	
-	float heightAtThisPoint = texture(tex0, uv).x;
+	float heightAtThisPoint = texture(tex0, uv).z;
+	
+	vec3 thisPoint = vec3(uv, heightAtThisPoint);
 
-	float maxAngle = 0;
-
-	for(int radius = 1; radius < 2; radius++) 
+	float minAngle = .5 * PI;
+	
+	if(heightAtThisPoint != maxHeight) 
 	{
-		for(int x = -radius; x <= radius; x++) 
+		for(int radius = 1; radius < txtSize.x; radius++) 
 		{
-			for(int y = -radius; y <= radius; y++) 
+			vec2 maxHeightCoord = vec2(uv.x + radius * xSize, uv.y);
+			vec3 maxHeightPoint = vec3(maxHeightCoord, maxHeight);
+			float minPossibleAngle = acos(dot(normalize(maxHeightPoint - thisPoint), vec3(0, 0, 1)));
+
+			if(minAngle < minPossibleAngle)
 			{
-				if(x == 0 && y == 0)
-					continue;
+				break;
+			}
 
-				vec2 offset = vec2(xSize * x, ySize * y);
-				vec2 nextCoord = uv + offset;
+			for(int x = -radius; x <= radius; x += radius * 2) 
+			{
+				for(int y = -radius; y <= radius; y++) 
+				{
+					vec2 offset = vec2(xSize * x, ySize * y);
+					vec2 nextCoord = uv + offset;
+				
+					nextCoord.x = clamp(nextCoord.x, xSize, 1 - xSize);
+					nextCoord.y = clamp(nextCoord.y, ySize, 1 - ySize);
+				
+					float heightNextPoint = texture(tex0, nextCoord).z;
 
-				if (nextCoord.x < 0 || nextCoord.x > 1)
-					continue;
+					vec3 nextPoint = vec3(nextCoord, heightNextPoint);
 
-				if (nextCoord.y < 0 || nextCoord.y > 1)
-					continue;
-			
-				float heightNextStep = texture(tex0, nextCoord, 0).x;
-			
-				float angle = atan((heightNextStep - heightAtThisPoint) / length(offset));
+					float nextAngle = acos(dot(normalize(nextPoint - thisPoint), vec3(0, 0, 1)));
+					minAngle = min(minAngle, nextAngle);
+				}
+			}
 
-				maxAngle = max(angle, maxAngle);
+			for(int y = -radius; y <= radius; y += radius * 2) 
+			{
+				for(int x = -radius; x <= radius; x++) 
+				{
+					vec2 offset = vec2(xSize * x, ySize * y);
+					vec2 nextCoord = uv + offset;
+				
+					nextCoord.x = clamp(nextCoord.x, xSize, 1 - xSize);
+					nextCoord.y = clamp(nextCoord.y, ySize, 1 - ySize);
+				
+					float heightNextPoint = texture(tex0, nextCoord).z;
+
+					vec3 nextPoint = vec3(nextCoord, heightNextPoint);
+
+					float nextAngle = acos(dot(normalize(nextPoint - thisPoint), vec3(0, 0, 1)));
+					minAngle = min(minAngle, nextAngle);
+				}
 			}
 		}
 	}
 
-	float coneAngle = 2 * PI - 2 * maxAngle;
-	
-	
-	color.rgb = vec3(coneAngle);
+		
+	color.rgb = vec3(minAngle);
+
 
 	gl_FragColor = color;
 
