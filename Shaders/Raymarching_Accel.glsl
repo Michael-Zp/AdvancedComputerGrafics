@@ -35,7 +35,7 @@ void main()
 	if(heightAtThisPoint != maxHeight) 
 	{
 		for(int radius = 1; radius < txtSize.x; radius++) 
-		{
+		{ 
 			vec2 maxHeightCoord = vec2(uv.x + radius * xSize, uv.y);
 			vec3 maxHeightPoint = vec3(maxHeightCoord, maxHeight);
 			float minPossibleAngle = acos(dot(normalize(maxHeightPoint - thisPoint), vec3(0, 0, 1)));
@@ -44,7 +44,7 @@ void main()
 			{
 				break;
 			}
-
+			
 			for(int x = -radius; x <= radius; x += radius * 2) 
 			{
 				for(int y = -radius; y <= radius; y++) 
@@ -58,6 +58,9 @@ void main()
 					float heightNextPoint = texture(tex0, nextCoord).z;
 
 					vec3 nextPoint = vec3(nextCoord, heightNextPoint);
+					
+					if(heightNextPoint < thisPoint.z)
+						continue;
 
 					float nextAngle = acos(dot(normalize(nextPoint - thisPoint), vec3(0, 0, 1)));
 					minAngle = min(minAngle, nextAngle);
@@ -66,7 +69,7 @@ void main()
 
 			for(int y = -radius; y <= radius; y += radius * 2) 
 			{
-				for(int x = -radius; x <= radius; x++) 
+				for(int x = -radius + 1; x <= radius - 1; x++) 
 				{
 					vec2 offset = vec2(xSize * x, ySize * y);
 					vec2 nextCoord = uv + offset;
@@ -75,6 +78,9 @@ void main()
 					nextCoord.y = clamp(nextCoord.y, ySize, 1 - ySize);
 				
 					float heightNextPoint = texture(tex0, nextCoord).z;
+
+					if(heightNextPoint < thisPoint.z)
+						continue;
 
 					vec3 nextPoint = vec3(nextCoord, heightNextPoint);
 
