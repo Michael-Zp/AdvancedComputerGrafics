@@ -29,6 +29,8 @@ struct Ray
 	vec3 direction;
 };
 
+const int NoHitType = -1;
+
 const int TriangleType = 0;
 struct Triangle 
 {
@@ -230,7 +232,13 @@ struct RayCastSolution rayCastAll(struct Sphere[SPHERE_COUNT] spheres, struct Pl
 	}
 	else 
 	{
-		solution.type = -1;
+		solution.type = NoHitType;
+		solution.dist = -10000000;
+	}
+
+	if(solution.dist > 1000) 
+	{
+		solution.type = NoHitType;
 		solution.dist = -10000000;
 	}
 
@@ -260,7 +268,7 @@ void main()
 	vec4 color = vec4(uv, 0, 1);
 	
 	float fov = .1 * PI;
-	struct Ray ray = GetCameraRay(vec3(0, 2, 0), fov, gl_FragCoord.xy, iResolution);
+	struct Ray ray = GetCameraRay(vec3(0, 1, 0), fov, gl_FragCoord.xy, iResolution);
 	
 	struct LightSource lightSource;
 	lightSource.position = vec3(-10, 10, 0); 
@@ -298,20 +306,17 @@ void main()
 	//color.rgb = abs(ray.direction);
 	
 	struct Material[MATERIAL_COUNT] materials;
-	materials[0] = struct Material(vec3(1), 8f);
+	materials[0] = struct Material(vec3(.5), 8f);
 	materials[1] = struct Material(vec3(1, 0, 0), 8f);
 	materials[2] = struct Material(vec3(0, 1, 0), 8f);
 	materials[3] = struct Material(vec3(0, 0, 1), 8f);
 	materials[4] = struct Material(vec3(1, 0, 1), 8f);
-
-	struct Plane plane1;
-	plane1.dist = 0;
-	plane1.normal = normalize(vec3(0, 1, 0));
-	plane1.mat = 0;
-	
+		
 
 	struct Plane[PLANE_COUNT] planes;
-	planes[0] = plane1;
+	planes[0].dist = 0;
+	planes[0].normal = normalize(vec3(0, 1, 0));
+	planes[0].mat = 0;
 
 	//Sphere
 	struct Sphere sphere1;
@@ -347,6 +352,10 @@ void main()
 	vec3 hitPoint = ray.origin + ray.direction * solution.dist;
 
 	switch(solution.type) {
+		case NoHitType:
+			color.rgb += vec3(1);
+			break;
+
 		case TriangleType:
 			break;
 
@@ -359,19 +368,63 @@ void main()
 			break;
 
 		default:
-			color.rgb = vec3(0);
+			color.rgb = vec3(1);
 	}
 	
-	vec3 shadowPoint = hitPoint + 0.001f * solution.normal;
-
-	float hasSolution = step(0.00001f, solution.dist);
+	const float epsilon = 0.001f;
+		
+	vec3 shadowPoint = hitPoint + epsilon * solution.normal;
+	
+	float hasSolution = step(epsilon, solution.dist);
 	bool bIsInShadow = isInShadow(shadowPoint, lightSource.position, spheres);
 
 	color.rgb = hasSolution * (bIsInShadow ? ambientLight : color.rgb)
 				+ (1 - hasSolution) * vec3(0f);
 
 
+	const int RECURSIONS = 3;
+	for(int i = 0; i < RECURSIONS; i++)
+	{
+		vec3 hitPoint = ray.origin + ray.direction * solution.dist;
 
-	
+		ray.origin = hitPoint + epsilon * solution.normal;
+		ray.direction = reflect(ray.direction, solution.normal);
+
+		solution = rayCastAll(spheres, planes, ray);
+		switch(solution.type) {
+			case NoHitType:
+				color.rgb += vec3(0);
+				break;
+
+			case TriangleType:
+				break;
+
+			case PlaneType:
+				color.rgb += materials[solution.mat].color * .3;
+				break;
+
+			case SphereType:
+				color.rgb += GetColorOfSphere(lightSource, ambientLight, spheres[solution.index], ray, hitPoint, materials[solution.mat]);
+				break;
+
+			default:
+				color.rgb += vec3(0);
+		}
+	}
+
+	const float BrechzahlMedium1 = 1;		//Luft
+	const float BrechzahlMedium2 = 1.46;	//Glas
+
+
+	for(int i = 0; i < RECURSIONS; i++) 
+	{
+		vec3 hitPoint = ray.origin + ray.direction * solution.dist;
+
+		ray.origin = hitPoint - epsilon * solution.normal;
+
+
+		ray.direction = refract(ray.direction, solution.normal, 
+	}
+
 	gl_FragColor = color;
 }
