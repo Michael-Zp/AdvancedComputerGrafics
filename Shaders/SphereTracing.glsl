@@ -20,8 +20,13 @@ float distanceToSphere(vec3 vecToCenter, float radius)
 	return length(vecToCenter) - radius;
 }
 
+float distanceToBox(vec3 vecToCenter, vec3 box)
+{
+	return length(max(abs(vecToCenter) - box, 0.0));
+}
 
-vec3 GetColorOfSphere(struct LightSource source, vec3 ambientLight, vec3 hitPoint, vec3 normal, vec3 camDir, vec3 color, float shininess)
+
+vec3 GetColor(struct LightSource source, vec3 ambientLight, vec3 hitPoint, vec3 normal, vec3 camDir, vec3 color, float shininess)
 {
 	vec3 lightDirection = normalize(source.position - hitPoint);
 	vec3 reflectDirection = normalize(reflect(lightDirection, normal));
@@ -42,12 +47,33 @@ vec3 GetColorOfSphere(struct LightSource source, vec3 ambientLight, vec3 hitPoin
 	return sphereAmbientColor + sphereDiffuseColor + sphereSpecularColor;
 }
 
-vec3 getNormal(vec3 hitPoint, vec3 sphereOrigin1, vec3 sphereOrigin2, float sphereRadius1, float sphereRadius2)
+vec3 getNormalOfSphere(vec3 hitPoint, vec3 sphereOrigin, float sphereRadius, float delta)
 {
-	float vecToCenter1 = distanceToSphere(sphereOrigin1 - hitPoint, sphereRadius1);
-	float vecToCenter2 = distanceToSphere(sphereOrigin2 - hitPoint, sphereRadius2);
-			
-	return normalize(hitPoint - (length(vecToCenter1) < length(vecToCenter2) ? sphereOrigin1 : sphereOrigin2));
+	vec2 deltaVec = vec2(delta, 0);
+
+	vec3 vecToCenter = hitPoint - sphereOrigin;
+
+	float nextX = distanceToSphere(vecToCenter + deltaVec.xyy, sphereRadius);
+	float nextY = distanceToSphere(vecToCenter + deltaVec.yxy, sphereRadius);
+	float nextZ = distanceToSphere(vecToCenter + deltaVec.yyx, sphereRadius);
+
+	float previousX = distanceToSphere(vecToCenter - deltaVec.xyy, sphereRadius);
+	float previousY = distanceToSphere(vecToCenter - deltaVec.yxy, sphereRadius);
+	float previousZ = distanceToSphere(vecToCenter - deltaVec.yyx, sphereRadius);
+
+	vec3 unnormalizedGradient = vec3(nextX - previousX, nextY - previousY, nextZ - previousZ);
+
+	return normalize(unnormalizedGradient);
+}
+
+float opUnify(float a, float b)
+{
+	return min(a, b);
+}
+
+float opCutOut(float cut, float stay)
+{
+	return max(-cut, stay);
 }
 
 
@@ -60,7 +86,7 @@ vec3 drawScene(vec3 camPos, vec3 camDir)
 
 	const float EPSILON = 1e-5;
 	const int Steps = 128;
-	const float maxDist = 40;
+	const float maxDist = 100;
 
 	vec3 color = vec3(0);
 	vec3 sphereOrigin1 = vec3(0, 2, 5);
@@ -72,7 +98,10 @@ vec3 drawScene(vec3 camPos, vec3 camDir)
 	float dist = 0;
 	for(int t = 0; t < Steps; t++)
 	{
-		float distanceToObj = min(distanceToSphere(sphereOrigin1 - rayPos, sphereRadius1), distanceToSphere(sphereOrigin2 - rayPos, sphereRadius2));
+		float sphere1 = distanceToSphere(sphereOrigin1 - rayPos, sphereRadius1);
+		float sphere2 = distanceToSphere(sphereOrigin2 - rayPos, sphereRadius2);
+		float box1 = distanceToBox(vec3(1, 6, 5) - rayPos, vec3(1, 1, 1));
+		float distanceToObj = opUnify(box1, opUnify(sphere1, sphere2));
 		if(distanceToObj < EPSILON)
 		{
 			rayPos += distanceToObj * camDir;
@@ -80,10 +109,10 @@ vec3 drawScene(vec3 camPos, vec3 camDir)
 			float vecToCenter1 = distanceToSphere(sphereOrigin1 - rayPos, sphereRadius1);
 			float vecToCenter2 = distanceToSphere(sphereOrigin2 - rayPos, sphereRadius2);
 			
-			vec3 normal = getNormal(rayPos, sphereOrigin1, sphereOrigin2, sphereRadius1, sphereRadius2);
+			vec3 normal = length(vecToCenter1) < length(vecToCenter2) ? getNormalOfSphere(rayPos, sphereOrigin1, sphereRadius1, 0.01) : getNormalOfSphere(rayPos, sphereOrigin2, sphereRadius2, 0.01);
 			vec3 matColor = length(vecToCenter1) < length(vecToCenter2) ? vec3(1, 0, 0) : vec3(1, 1, 1);
 
-			color.rgb = GetColorOfSphere(light, vec3(.1f), rayPos, normal, camDir, matColor, 16);
+			color.rgb = GetColor(light, vec3(.1f), rayPos, normal, camDir, matColor, 16);
 			break;
 		}
 		if(dist > maxDist) 
@@ -92,6 +121,8 @@ vec3 drawScene(vec3 camPos, vec3 camDir)
 		rayPos += distanceToObj * camDir;
 		dist += distanceToObj;
 	}
+	
+	color.rgb += mix(color.rgb, vec3(1, 1, 0), dist / maxDist);
 
 	return color;
 }
