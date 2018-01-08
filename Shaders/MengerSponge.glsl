@@ -4,6 +4,8 @@ uniform vec2 iResolution; //[xResolution, yResolution] of display
 uniform float iGlobalTime; //global time in seconds as float
 uniform vec3 iMouse; //[xPosMouse, yPosMouse, isLeftMouseButtonClicked]
 	
+uniform float colorRed;
+
 #include "libs/camera.glsl"
 
 #define PI 3.1415
@@ -50,10 +52,7 @@ float map(in vec3 position)
 		vec3 a = mod( position * scale, 2.0 ) - 1.0;
 		scale *= 3.0;
 		vec3 r = 1.0 - 3.0 * abs(a);
-
-		//r.x *= 2;
-		r.y = mix(r.x, r.y, r.z);
-		
+				
 		float c = distanceCross(r)/scale;
 		d = max(d,c);
 	}
@@ -112,7 +111,7 @@ void main()
 
 	
 	struct LightSource light;
-	light.position = vec3(3, 5, 1);
+	light.position = vec3(3, 10, -3);
 	light.color = vec3(1, 1, 1);
 
 	
@@ -138,11 +137,11 @@ void main()
 			//color.rgb = 1 - (vec3(1) * i) / STEPS;
 			//color.rgb = getNormal(currPos, 1e-2);
 			vec3 normal = getNormal(currPos, 1e-2);
-			color.rgb = GetColor(light, vec3(.1f), currPos, normal, camDir, vec3(.8, .3, .2), 1f);
+			color.rgb = GetColor(light, vec3(.1f), currPos, normal, camDir, vec3(colorRed, .1, .1), 1f);
 			break;
 		}
 
-		currPos = currPos + ray.direction * delta;
+		currPos = currPos + ray.direction * dist;
 	}
 
 	gl_FragColor = color;
