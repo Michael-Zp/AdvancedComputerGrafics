@@ -1,3 +1,16 @@
+#ifndef noise_glsl
+#define noise_glsl
+
+float quinticInterpolation(float x)
+{
+	return x*x*x*(x*(x*6.-15.)+10.);
+}
+
+vec2 quinticInterpolation(vec2 value)
+{
+	return vec2(quinticInterpolation(value.x), quinticInterpolation(value.y));
+}
+
 float rand(float seed)
 {
 	return fract(sin(seed) * 1231534.9);
@@ -27,7 +40,8 @@ float noise(float u)
 
 	float f = fract(u);
 	float weight = f; // linear interpolation
-	weight = smoothstep(0, 1, f); // cubic interpolation
+	// weight = smoothstep(0, 1, f); // cubic interpolation
+	// weight = quinticInterpolation(f);
 
 	return mix(v0, v1, weight);
 }
@@ -46,6 +60,7 @@ float noise(vec2 coord)
 	vec2 f = fract(coord);
 	vec2 weight = f; // linear interpolation
 	weight = smoothstep(0, 1, f); // cubic interpolation
+	weight = quinticInterpolation(f);
 
 	float x1 = mix(v00, v10, weight.x);
 	float x2 = mix(v01, v11, weight.x);
@@ -67,6 +82,7 @@ float gnoise(float u)
 	
 	float weight = f; // linear interpolation
 	weight = smoothstep(0, 1, f); // cubic interpolation
+	weight = quinticInterpolation(f);
 
 	return mix(v0, v1, weight) + 0.5;
 }
@@ -90,8 +106,11 @@ float gnoise(vec2 coord)
 
 	vec2 weight = f; // linear interpolation
 	weight = smoothstep(0, 1, f); // cubic interpolation
+	weight = quinticInterpolation(f);
 
 	float x1 = mix(v00, v10, weight.x);
 	float x2 = mix(v01, v11, weight.x);
 	return mix(x1, x2, weight.y) + 0.5;
 }
+
+#endif

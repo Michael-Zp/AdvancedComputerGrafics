@@ -1,3 +1,6 @@
+#ifndef camera_glsl
+#define camera_glsl
+
 uniform float iCamPosX;
 uniform float iCamPosY;
 uniform float iCamPosZ;
@@ -14,16 +17,20 @@ vec3 calcCameraPos()
 // Read like this: R(p.xz, a) rotates "x towards z".
 // This is fast if <a> is a compile-time constant and slower (but still practical) if not.
 void rotateAxis(inout vec2 p, float a) {
-	p = cos(a)*p + sin(a)*vec2(p.y, -p.x);
+	p = cos(a)*p + sin(a) * vec2(p.y, -p.x);
 }
 
 vec3 calcCameraRayDir(float fov, vec2 fragCoord, vec2 resolution) 
 {
-	float tanFov = tan(fov / 2.0 * 3.14159 / 180.0) / resolution.x;
-	vec2 p = tanFov * (fragCoord * 2.0 - resolution.xy);
-	vec3 rayDir = normalize(vec3(p.x, p.y, 1.0));
+	const float PI = 3.14159;
+
+	float fx = tan(radians(fov) / 2.0) / resolution.x;
+	vec2 d = fx * (fragCoord * 2.0 - resolution);
+	vec3 rayDir = normalize(vec3(d, 1.0));
 	rotateAxis(rayDir.yz, iCamRotX);
 	rotateAxis(rayDir.xz, iCamRotY);
 	rotateAxis(rayDir.xy, iCamRotZ);
 	return rayDir;
 }
+
+#endif

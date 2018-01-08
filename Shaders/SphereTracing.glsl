@@ -2,16 +2,16 @@
 
 #include "libs/camera.glsl"
 
-
-uniform vec2 iResolution; //[xResolution, yResolution] of display
-uniform float iGlobalTime; //global time in seconds as float
-uniform vec3 iMouse; //[xPosMouse, yPosMouse, isLeftMouseButtonClicked]
-
 struct LightSource 
 {
 	vec3 position;
 	vec3 color;
 };
+
+
+uniform vec2 iResolution; //[xResolution, yResolution] of display
+uniform float iGlobalTime; //global time in seconds as float
+uniform vec3 iMouse; //[xPosMouse, yPosMouse, isLeftMouseButtonClicked]
 
 
 
