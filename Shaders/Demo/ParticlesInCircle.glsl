@@ -104,17 +104,22 @@ float mapParticles(vec3 position)
 	for(int i = 0; i < 150; i++) 
 	{
 		vec3 offset = randomDirection(i);
-		dist = opUnify(dist, sdSphere(position - offset * fract(iGlobalTime / 4 + rand(i) + 1.5) * mod(i, 7), .04));
+		dist = opUnify(dist, sdSphere(position - offset * fract(iGlobalTime / 4 + rand(i) + 1.5f) * mod(i, 7), .04));
 	}
 
-	float visiblePart = opCutOut(sdSphere(position, 1.5), sdSphere(position, 3));
+	float visiblePart = opCutOut(sdSphere(position, 1.5f), sdSphere(position, 3f));
 
 	return opIntersect(visiblePart, dist);
 }
 
+float mapBackground(vec3 position)
+{
+	return sdBox(position + vec3(0, 0, -5), vec3(10, 10, 1));
+}
+
 float map(vec3 position) 
 {
-	return opUnify(mapPlanet(position), mapParticles(position));
+	return opUnify(opUnify(mapPlanet(position), mapParticles(position)), mapBackground(position));
 }
 
 
@@ -136,8 +141,9 @@ vec4 drawScene(vec3 camPos, vec3 camDir)
 	{
 		float distancePlanet = mapPlanet(rayPos);
 		float distanceParticles = mapParticles(rayPos);
+		float distanceBackground = mapBackground(rayPos);
 
-		float distanceToObj = opUnify(distancePlanet, distanceParticles);
+		float distanceToObj = opUnify(opUnify(distancePlanet, distanceParticles), distanceBackground);
 
 		if(distanceToObj < EPSILON)
 		{
@@ -145,14 +151,15 @@ vec4 drawScene(vec3 camPos, vec3 camDir)
 			
 			vec3 normal = getNormal(rayPos, .1);
 
-			float hitParticle = step(distanceParticles, distancePlanet);
+			//vec3 matColor = (distanceBackground < distanceParticles && distanceBackground < distancePlanet) ? vec3(0) : vec3(1);
 
-			color.rgb = hitParticle > 0.5 ? vec3(1) : GetColor(light, vec3(.1f), rayPos, normal, camDir, vec3(1), 16);
-			
-			color.a = hitParticle * (3.25 - distance(rayPos, vec3(0))) + (1 - hitParticle);
+			float hitBackground = step(distanceBackground, distanceParticles) * step(distanceBackground, distancePlanet);
+			vec3 matColor = hitBackground * vec3(0) + (1 - hitBackground) * vec3(1);
 
-			//Fake ass alpha blending
-			color.rgb = mix(vec3(0), color.rgb, color.a);
+			color.rgb = GetColor(light, vec3(.1f), rayPos, normal, camDir, matColor, 16);
+
+			float hitParticle = step(distanceParticles, distanceBackground) * step(distanceParticles, distancePlanet);
+			color.a = 1 - hitParticle;
 
 			break;
 		}
