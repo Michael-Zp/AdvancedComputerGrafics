@@ -92,29 +92,47 @@ vec3 randomDirection(float seed)
 	return normalize( vec3( rand2( vec2(seed, seed * 2) ) , (rand(seed * 3) - .5) * 2 ) );
 }
 
+vec2 randomDirection2D(float seed)
+{
+	return normalize( rand2( vec2(seed, seed * 2) ) );
+}
+
 float mapPlanet(vec3 position) 
 {
 	return sdSphere(position, 1.5f);
 }
 
-float mapParticles(vec3 position)
-{
-	float dist = 100000;
 
+vec4 particles(vec2 pixelPos) 
+{
+	float minDist = 100000;
+	float minIndex = 0;
 	for(int i = 0; i < 150; i++) 
 	{
-		vec3 offset = randomDirection(i);
-		dist = opUnify(dist, sdSphere(position - offset * fract(iGlobalTime / 4 + rand(i) + 1.5) * mod(i, 7), .04));
+		vec2 offset = randomDirection2D(i);
+		vec2 position = offset * fract(iGlobalTime / 4 + rand(i) + .3) * mod(i, 4);
+		float dist = distance(position, pixelPos - vec2(0.5));
+
+		if(dist < minDist)
+		{
+			minDist = dist;
+			minIndex = i;
+		}
+
 	}
 
-	float visiblePart = opCutOut(sdSphere(position, 1.5), sdSphere(position, 3));
-
-	return opIntersect(visiblePart, dist);
+	if(minDist < 0.01) 
+	{
+		float whiteness = 1 - (distance(pixelPos, vec2(0.5)) + rand(minIndex) * .5);
+		return vec4(vec3(whiteness), 0);
+	}
+		
+	return vec4(0);
 }
 
 float map(vec3 position) 
 {
-	return opUnify(mapPlanet(position), mapParticles(position));
+	return mapPlanet(position);
 }
 
 
@@ -134,10 +152,7 @@ vec4 drawScene(vec3 camPos, vec3 camDir)
 	float dist = 0;
 	for(int t = 0; t < Steps; t++)
 	{
-		float distancePlanet = mapPlanet(rayPos);
-		float distanceParticles = mapParticles(rayPos);
-
-		float distanceToObj = opUnify(distancePlanet, distanceParticles);
+		float distanceToObj = map(rayPos);
 
 		if(distanceToObj < EPSILON)
 		{
@@ -145,15 +160,8 @@ vec4 drawScene(vec3 camPos, vec3 camDir)
 			
 			vec3 normal = getNormal(rayPos, .1);
 
-			float hitParticle = step(distanceParticles, distancePlanet);
-
-			color.rgb = hitParticle > 0.5 ? vec3(1) : GetColor(light, vec3(.1f), rayPos, normal, camDir, vec3(1), 16);
+			color.rgb = GetColor(light, vec3(.1f), rayPos, normal, camDir, vec3(1), 16);
 			
-			color.a = hitParticle * (3.25 - distance(rayPos, vec3(0))) + (1 - hitParticle);
-
-			//Fake ass alpha blending
-			color.rgb = mix(vec3(0), color.rgb, color.a);
-
 			break;
 		}
 		if(dist > maxDist) 
@@ -179,9 +187,19 @@ void main()
 	camP += vec3(0, 0, -4);
 	vec3 camDir = calcCameraRayDir(80.0, gl_FragCoord.xy, iResolution);
 	
+	vec4 particleColor = particles(uv);
 
-	color = drawScene(camP, camDir);
+	vec4 planetColor = drawScene(camP, camDir);
+
+	
+	color = particleColor;
+
+	if(distance(planetColor, vec4(0)) > 1e-5)
+	{
+		color = planetColor;
+	}
+
+
 	
 	gl_FragColor = color;
->>>>>>> 9d5b11b17fe87bcc5ca776cb06a1df1e7a26698c
 }
