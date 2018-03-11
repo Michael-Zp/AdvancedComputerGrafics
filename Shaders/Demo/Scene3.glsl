@@ -24,7 +24,7 @@ out vec4 unstuckData; 	//float SphereIsUnstuck
 vec2 uv;
 
 const float EPSILON = 1e-5;
-const int sphereCount = 30;
+const int sphereCount = 20;
 vec2 lastTimeXY = vec2(1);
 
 struct PhysicsSphere
@@ -221,7 +221,7 @@ PhysicsSphere updateSphere(PhysicsSphere currSphere, PhysicsSphere[sphereCount] 
 
 	//Drag
 
-	currSphere.velocity += (-currSphere.velocity * difTime * 0.01);
+	currSphere.velocity += (-currSphere.velocity * difTime * 0.02);
 
 
 	//Gravity

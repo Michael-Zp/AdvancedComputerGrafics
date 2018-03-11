@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DemoData2 xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Uniforms>
+    <Uniform>
+      <UniformName>sunPosition</UniformName>
+      <Keyframes>
+        <Keyframe>
+          <Time>1.57075</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>10.99525</Time>
+          <Value>3</Value>
+        </Keyframe>
+      </Keyframes>
+    </Uniform>
+  </Uniforms>
+  <Tracks>
+    <Track>
+      <Name>sum</Name>
+      <ShaderKeyframes>
+        <ShaderKeyframe>
+          <Time>0</Time>
+          <ShaderPath>.\Scene4.glsl</ShaderPath>
+        </ShaderKeyframe>
+      </ShaderKeyframes>
+    </Track>
+  </Tracks>
+  <Textures>
+    <string>.\Textures\wood.jpg</string>
+  </Textures>
+  <SoundFileName />
+</DemoData2>

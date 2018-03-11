@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DemoData2 xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Uniforms />
+  <Tracks>
+    <Track>
+      <Name>sum</Name>
+      <ShaderKeyframes>
+        <ShaderKeyframe>
+          <Time>12.9345942</Time>
+          <ShaderPath>.\Scene3.glsl</ShaderPath>
+        </ShaderKeyframe>
+      </ShaderKeyframes>
+    </Track>
+  </Tracks>
+  <Textures>
+    <string>.\Textures\noise.png</string>
+    <string>.\Textures\brown.jpg</string>
+  </Textures>
+  <SoundFileName />
+</DemoData2>
