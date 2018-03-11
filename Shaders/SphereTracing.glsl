@@ -26,7 +26,7 @@ float distanceToBox(vec3 vecToCenter, vec3 box)
 }
 
 
-vec3 GetColor(struct LightSource source, vec3 ambientLight, vec3 hitPoint, vec3 normal, vec3 camDir, vec3 color, float shininess)
+vec3 GetColor(LightSource source, vec3 ambientLight, vec3 hitPoint, vec3 normal, vec3 camDir, vec3 color, float shininess)
 {
 	vec3 lightDirection = normalize(source.position - hitPoint);
 	vec3 reflectDirection = normalize(reflect(lightDirection, normal));
@@ -80,7 +80,7 @@ float opCutOut(float cut, float stay)
 
 vec3 drawScene(vec3 camPos, vec3 camDir)
 {
-	struct LightSource light;
+	LightSource light;
 	light.position = vec3(0, 10, 1);
 	light.color = vec3(1, 1, 1);
 
@@ -91,8 +91,8 @@ vec3 drawScene(vec3 camPos, vec3 camDir)
 	vec3 color = vec3(0);
 	vec3 sphereOrigin1 = vec3(0, 2, 5);
 	vec3 sphereOrigin2 = vec3(2, 2, 5);
-	float sphereRadius1 = 2f;
-	float sphereRadius2 = 2f;
+	float sphereRadius1 = 2;
+	float sphereRadius2 = 2;
 	
 	vec3 rayPos = camPos;
 	float dist = 0;
