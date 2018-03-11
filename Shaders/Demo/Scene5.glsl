@@ -16,9 +16,7 @@ uniform float orthogonal;
 uniform float shouldRotate;
 uniform float lightIntensity;
 
-const float startTime = 0.0;
-float localTime = 0.0;
-
+float localTime = iGlobalTime - 34.0;
 
 
 float smin( float a, float b, float k )
@@ -124,7 +122,7 @@ float mapDNA(vec3 rayPos, out float hitId, out float horizontalId, float helixOn
 
 
 	//Model stuff
-	float rotationAngle = rayPos.y / stretch + (iGlobalTime * rand(zId * zId + seed)) * shouldRotate;
+	float rotationAngle = rayPos.y / stretch + (localTime * rand(zId * zId + seed)) * shouldRotate;
 
 	float yRotateC = cos(rotationAngle);
 	float yRotateS = sin(rotationAngle);
@@ -275,8 +273,6 @@ void main()
 {
 	//create uv to be in the range [0..1]x[0..1]
 	vec2 uv = gl_FragCoord.xy / iResolution;
-
-	localTime = iGlobalTime - startTime;
 
 	//4 component color red, green, blue, alpha
 	vec4 color = vec4(0, 0, 0, 1);

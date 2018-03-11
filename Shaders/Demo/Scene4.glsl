@@ -12,6 +12,8 @@ uniform sampler2D tex1;
 uniform sampler2D tex2;
 uniform float sunPosition;
 
+float localTime = iGlobalTime - 22.0;
+
 vec2 uv;
 
 const float EPSILON = 1e-5;
@@ -96,8 +98,8 @@ float heightRatio(vec3 posOnSphereEdge)
 
 	mat2 rotation = mat2(c, s, -s, c);
 
-	heightRatio -= length(texture2D(tex0, rotation * posOnSphereEdge.xy)) * 0.04;
-	heightRatio += length(texture2D(tex0, rotation * posOnSphereEdge.yx)) * 0.05;
+	heightRatio -= length(texture2D(tex2, rotation * posOnSphereEdge.xy)) * 0.04;
+	heightRatio += length(texture2D(tex2, rotation * posOnSphereEdge.yx)) * 0.05;
 
 	return heightRatio;
 }
@@ -223,10 +225,10 @@ vec4 renderSun(bool ignited, vec2 sunPos, float size)
     vec2 localUV = uv;
     float freqs[4];
 
-	freqs[0] = texture2D( tex2, vec2( 0.01, 0.25 ) ).x;
-	freqs[1] = texture2D( tex2, vec2( 0.07, 0.25 ) ).x;
-	freqs[2] = texture2D( tex2, vec2( 0.15, 0.25 ) ).x;
-	freqs[3] = texture2D( tex2, vec2( 0.30, 0.25 ) ).x;
+	freqs[0] = texture2D( tex1, vec2( 0.01, 0.25 ) ).x;
+	freqs[1] = texture2D( tex1, vec2( 0.07, 0.25 ) ).x;
+	freqs[2] = texture2D( tex1, vec2( 0.15, 0.25 ) ).x;
+	freqs[3] = texture2D( tex1, vec2( 0.30, 0.25 ) ).x;
 
 	float brightness	= freqs[1] * 0.25 + freqs[2] * 0.25;
 	float radius		= 0.23 + brightness * 0.2;
@@ -241,7 +243,7 @@ vec4 renderSun(bool ignited, vec2 sunPos, float size)
         orangeRed = vec3(0.1, 0.1, 0.1) / 2.0;
     }
 
-	float time		    = iGlobalTime * 0.002;
+	float time		    = localTime * 0.002;
 	float aspect	    = iResolution.x / iResolution.y;
 
     localUV -= sunPos;
@@ -300,7 +302,7 @@ vec4 renderSun(bool ignited, vec2 sunPos, float size)
 		newUv += vec2( time, 0.0 );
 
         //Randomness
-		vec3 texSample 	= texture2D( tex1, newUv ).rgb; 
+		vec3 texSample 	= texture2D( tex0, newUv ).rgb; 
 
         //Random offset on texture call, based on time
 		float uOff		= ( texSample.g * brightness * 4.5 + time );
@@ -309,7 +311,7 @@ vec4 renderSun(bool ignited, vec2 sunPos, float size)
 		vec2 starUV		= newUv + vec2( uOff, 0.0 );
 
         //Simple texture call with offset randomy texture coords
-		starSphere		= texture2D( tex2, starUV ).rgb;
+		starSphere		= texture2D( tex1, starUV ).rgb;
 
         if(!ignited)
         {
@@ -334,11 +336,11 @@ vec4 renderSun(bool ignited, vec2 sunPos, float size)
 vec3 render(vec3 camP, vec3 camDir)
 {
 	
-	LightSource source = LightSource(vec3(-sin(iGlobalTime / 2.0) * 80, 0, -cos(iGlobalTime / 2.0) * 80), vec3(1));
+	LightSource source = LightSource(vec3(-sin(localTime / 2.0) * 80, 0, -cos(localTime / 2.0) * 80), vec3(1));
 
 	
 	//LightSource source = LightSource(vec3(20, 0, 0), vec3(1));
-	//source.position.xz = vec2(sin(iGlobalTime), cos(iGlobalTime)) * 90;
+	//source.position.xz = vec2(sin(localTime), cos(localTime)) * 90;
 
 
 	//Calculate color of the image
@@ -404,8 +406,8 @@ vec3 render(vec3 camP, vec3 camDir)
 		}
 		else if(endHeightRatio >= landHeightRatio)
 		{
-			vec3 mountainColorHere = colors[3] - length(texture2D(tex0, uv.yx)) * vec3(0.4) + vec3(0.4);
-			vec3 landColorHere = colors[2] - texture2D(tex0, uv).rgb * 0.4;
+			vec3 mountainColorHere = colors[3] - length(texture2D(tex2, uv.yx)) * vec3(0.4) + vec3(0.4);
+			vec3 landColorHere = colors[2] - texture2D(tex2, uv).rgb * 0.4;
 			if(endHeightRatio >= mountainHeightRatio + landToMaintainMixRange / 2.0)
 			{
 				//Mountains

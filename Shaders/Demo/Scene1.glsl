@@ -5,7 +5,7 @@
 #include "../libs/noise3D.glsl" //uncomment for simplex noise: slower but more "fractal"
 #include "../libs/Noise.glsl"
 
-uniform sampler2D texLastFrame;
+uniform sampler2D texLastFrame0;
 uniform float iGlobalTime;
 uniform vec2 iResolution;
 
@@ -312,7 +312,7 @@ vec3 render(vec3 camP, vec3 camDir)
 
 	color += render( Ray( camP, camDir ), targetCloud);
 
-	color += texture2D(texLastFrame, uv).rgb * .4;
+	color += texture2D(texLastFrame0, uv).rgb * .4;
 
 	return color;
 }

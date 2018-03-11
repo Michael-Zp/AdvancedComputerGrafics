@@ -170,9 +170,9 @@
     </Track>
   </Tracks>
   <Textures>
+    <string>.\Textures\noise.png</string>
     <string>.\Textures\brown.jpg</string>
     <string>.\Textures\wood.jpg</string>
-    <string>.\Textures\noise.png</string>
   </Textures>
   <SoundFileName />
 </DemoData2>

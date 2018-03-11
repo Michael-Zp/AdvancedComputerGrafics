@@ -15,6 +15,8 @@ uniform sampler2D texLastFrame4;
 uniform sampler2D tex0;
 uniform sampler2D tex1;
 
+float localTime = iGlobalTime - 7.0;
+
 out vec4 color; 		//Really the color
 out vec4 sphereData; 	//vec3 center; float radius
 out vec4 physicsData; 	//vec3 velocity; float mass
@@ -134,7 +136,7 @@ PhysicsSphere unstuckSpheres(PhysicsSphere currSphere, PhysicsSphere[sphereCount
 				vec3 moveVector;
 				if(other.center - currSphere.center == vec3(0))
 				{
-					moveVector = vec3(rand(iGlobalTime * currSphereIndex + i * 123), rand(iGlobalTime * i + currSphereIndex * 321), 0);
+					moveVector = vec3(rand(localTime * currSphereIndex + i * 123), rand(localTime * i + currSphereIndex * 321), 0);
 				}
 				else
 				{
@@ -172,7 +174,7 @@ PhysicsSphere updateSphere(PhysicsSphere currSphere, PhysicsSphere[sphereCount] 
 	BINDOUTPUTS
 
 	float lastTime = texture2D(texLastFrame3, coordsOfSave(lastTimeXY)).a;
-	float difTime = iGlobalTime - lastTime;
+	float difTime = localTime - lastTime;
 
 
 	//Collision
@@ -207,7 +209,7 @@ PhysicsSphere updateSphere(PhysicsSphere currSphere, PhysicsSphere[sphereCount] 
 			vec3 moveVector;
 			if(other.center - currSphere.center == vec3(0))
 			{
-				moveVector = vec3(rand(iGlobalTime * currSphereIndex + i * 123), rand(iGlobalTime * i + currSphereIndex * 321), 0);
+				moveVector = vec3(rand(localTime * currSphereIndex + i * 123), rand(localTime * i + currSphereIndex * 321), 0);
 			}
 			else
 			{
@@ -325,7 +327,7 @@ bool initalize()
 		
 		if(uv == coordsOfSave(lastTimeXY))
 		{
-			miscData.a = iGlobalTime;
+			miscData.a = localTime;
 		}
 		else 
 		{
@@ -388,7 +390,7 @@ vec4 renderSun(bool ignited, vec2 sunPos, float size)
         orangeRed = vec3(0.1, 0.1, 0.1) / 2.0;
     }
 
-	float time		    = iGlobalTime * 0.002;
+	float time		    = localTime * 0.002;
 	float aspect	    = iResolution.x / iResolution.y;
 
     localUV -= sunPos;
@@ -737,6 +739,6 @@ void main()
 
 	if(uv == coordsOfSave(lastTimeXY))
 	{
-		miscData.a = iGlobalTime;
+		miscData.a = localTime;
 	}
 }

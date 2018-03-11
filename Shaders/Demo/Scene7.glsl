@@ -13,6 +13,10 @@ uniform sampler2D tex2;
 uniform float growth;
 uniform float sunStrength;
 
+
+float localTime = iGlobalTime - 62.0;
+
+
 vec2 uv;
 
 
@@ -144,7 +148,7 @@ const float waterLevel = 2.0;
 
 HitInfo distanceWater(vec3 hitPoint)
 {
-	float waves = fbm(hitPoint + vec3(iGlobalTime / 10.0), 3) * 0.2;
+	float waves = fbm(hitPoint + vec3(localTime / 10.0), 3) * 0.2;
 
 	float waterHeight = (waterLevel + waves);
 	return HitInfo(hitPoint.y - waterHeight, waterId);
@@ -164,9 +168,9 @@ void seaGrass(out float seaGrassDist, out float seaGrassInnerDist, vec3 hitPoint
 	float seaGrassHeight = 0.5 + rand(seed) * 0.5;
 	seaGrassHeight *= clamp(growth, 0.01, 1.0);
 
-	vec3 seaGrassWave = vec3(sin(hitPoint.y * (8 + rand(seed * 123) * 4.0) + hitPoint.z * (8 + rand(seed * 234) * 4.0) + iGlobalTime) * hitPoint.y * 0.05, 
+	vec3 seaGrassWave = vec3(sin(hitPoint.y * (8 + rand(seed * 123) * 4.0) + hitPoint.z * (8 + rand(seed * 234) * 4.0) + localTime) * hitPoint.y * 0.05, 
 							 0.0, 
-							 cos(hitPoint.y * (17.5 + rand(seed * 345) * 5.0) + iGlobalTime * (3.0 + rand(seed * 456))) * 0.01);
+							 cos(hitPoint.y * (17.5 + rand(seed * 345) * 5.0) + localTime * (3.0 + rand(seed * 456))) * 0.01);
 
 	vec3 seaGrassSize = vec3(.005 + noise(hitPoint.y * 5.0) * 0.015 + 0.015, seaGrassHeight, .001);
 	float maxThickHeight = seaGrassHeight * (0.7 + rand(seed * 567) * 0.2);
@@ -180,7 +184,7 @@ void seaGrass(out float seaGrassDist, out float seaGrassInnerDist, vec3 hitPoint
 	float gridCellSize = gridArea / gridSize;
 	float xQuadrant = floor(seed / gridSize);
 	float zQuadrant = mod(seed, gridSize);
-	vec3 position = vec3(texture2D(tex0, vec2(rand(seed * 789.0 * (zQuadrant + 1.0)))).r, 0.0, texture2D(tex0, vec2(rand(seed * 987.0 * (xQuadrant + 1.0)))).r);
+	vec3 position = vec3(texture2D(tex1, vec2(rand(seed * 789.0 * (zQuadrant + 1.0)))).r, 0.0, texture2D(tex1, vec2(rand(seed * 987.0 * (xQuadrant + 1.0)))).r);
 	position.x = (xQuadrant * gridCellSize) + (position.x * gridCellSize) - gridArea / 2.0;
 	position.z = (zQuadrant * gridCellSize) + (position.z * gridCellSize) - gridArea / 2.0;
 
@@ -191,7 +195,7 @@ void seaGrass(out float seaGrassDist, out float seaGrassInnerDist, vec3 hitPoint
 HitInfo distanceRest(vec3 hitPoint)
 {
 	vec3 fbmVec = scaleDownVector((hitPoint + sin(hitPoint.z)) / 2.0, 3); //Noise reduction 
-	float noise = fbm(fbmVec, 3) * 0.15 + length(texture2D(tex1, hitPoint.xz / 10.0).rgb) * 0.05;
+	float noise = fbm(fbmVec, 3) * 0.15 + length(texture2D(tex2, hitPoint.xz / 10.0).rgb) * 0.05;
 	float waves = sin(hitPoint.x / 2.0 + hitPoint.z) * 0.1 + sin((hitPoint.x / 2.0 + hitPoint.z) * 10.0) * 0.06;
 
 	float sandHeight = (noise + waves + 0.0);
