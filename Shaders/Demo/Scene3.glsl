@@ -576,7 +576,7 @@ void main()
 	//color = texture2D(texLastFrame0, uv);
 
 	//Recover old state 
-	color = vec4(0); //Reset color state each frame -> Will be done in the background either way but it wont cost any performance and is better for readability
+	color = vec4(0.0, 0.0, 0.0, 1.0); //Reset color state each frame -> Will be done in the background either way but it wont cost any performance and is better for readability
 	sphereData = texture2D(texLastFrame1, uv);
 	physicsData = texture2D(texLastFrame2, uv);
 	miscData = texture2D(texLastFrame3, uv);
