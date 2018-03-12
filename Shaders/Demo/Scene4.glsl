@@ -484,7 +484,7 @@ vec3 render(vec3 camP, vec3 camDir)
 		//The dot product will produce artifacts on the wrong side of the planet. Will reduce or erradicate these artifacts
 		sunIntensity = sunIntensity * (1.0 - clamp(distance(camDir, normalize(source.position - atmosCenter)), 0.0, 1.0));
 
-		currentCol = mix(baseAtmosColor, vec3(0.6, 0.15, 0.), sunIntensity);
+		currentCol = mix(baseAtmosColor, vec3(0.6, 0.15, 0.), clamp(sunIntensity, 0.0, 1.0));
 	}
 	else if(t == -1)
 	{

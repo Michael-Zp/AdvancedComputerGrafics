@@ -271,7 +271,7 @@
           <ShaderPath>.\clearAll.glsl</ShaderPath>
         </ShaderKeyframe>
         <ShaderKeyframe>
-          <Time>0.05</Time>
+          <Time>2.03665972</Time>
           <ShaderPath>.\Scene1.glsl</ShaderPath>
         </ShaderKeyframe>
         <ShaderKeyframe>
@@ -283,7 +283,7 @@
           <ShaderPath>.\clearAll.glsl</ShaderPath>
         </ShaderKeyframe>
         <ShaderKeyframe>
-          <Time>7</Time>
+          <Time>8.98666</Time>
           <ShaderPath>.\Scene3.glsl</ShaderPath>
         </ShaderKeyframe>
         <ShaderKeyframe>
@@ -299,7 +299,7 @@
           <ShaderPath>.\clearAll.glsl</ShaderPath>
         </ShaderKeyframe>
         <ShaderKeyframe>
-          <Time>50</Time>
+          <Time>51.98666</Time>
           <ShaderPath>.\Scene6.glsl</ShaderPath>
         </ShaderKeyframe>
         <ShaderKeyframe>

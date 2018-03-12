@@ -225,10 +225,10 @@ float gameOfLive()
 		return noise(uv * 100) * 0.5;
 		*/
 
-		return step(0.9, noise(uv * 100.0));
+		return step(0.9, noise(uv * 100.0)) + 1.0;
 	}
 
-	if(oldState == 1.0)
+	if(oldState == 2.0)
 	{
 		return oldState;
 	}
@@ -256,7 +256,7 @@ float gameOfLive()
 
 	if(neighborsCount == 3.0)
 	{
-		return step(0.6, rand(localTime * uv.x * uv.y));
+		return step(0.6, rand(localTime * uv.x * uv.y)) + 1.0;
 	}
 
 	return oldState;
@@ -474,7 +474,7 @@ void main()
 
 		float state = texture2D(texLastFrame0, sphereUv).a;
 
-		vec3 landColor = mix(rockColor, woodColor, clamp(state, 0.0, 1.0));
+		vec3 landColor = mix(rockColor, woodColor, clamp(state - 1.0, 0.0, 1.0));
 
 
 		vec3 colors[4] = vec3[4] (
@@ -575,7 +575,7 @@ void main()
 		//The dot product will produce artifacts on the wrong side of the planet. Will reduce or erradicate these artifacts
 		sunIntensity = sunIntensity * (1.0 - clamp(distance(camDir, normalize(source.position - atmosCenter)), 0.0, 1.0));
 
-		currentCol = mix(baseAtmosColor, vec3(0.6, 0.15, 0.), sunIntensity);
+		currentCol = mix(baseAtmosColor, vec3(0.6, 0.15, 0.), clamp(sunIntensity, 0.0, 1.0));
 	}
 	else if(t == -1)
 	{

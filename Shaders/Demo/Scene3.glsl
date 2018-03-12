@@ -484,7 +484,7 @@ vec4 renderSun(bool ignited, vec2 sunPos, float size)
 const float DELTA = 0.01;
 const float STEPS = 100;
 
-vec4 render(PhysicsSphere[sphereCount] spheres, Ray ray) 
+vec3 render(PhysicsSphere[sphereCount] spheres, Ray ray) 
 {
 	//Calculate color of the image
 	float t = -1;
@@ -510,7 +510,7 @@ vec4 render(PhysicsSphere[sphereCount] spheres, Ray ray)
 
 	if(t == -1)
 	{
-		return vec4(0);
+		return vec3(0);
 	}
 
 	PhysicsSphere sphere = spheres[currIndex];
@@ -714,7 +714,7 @@ void main()
 	//color = abs(texture2D(texLastFrame1, uv));
 
 */
-	color += render(spheres, Ray(camP, camDir));
+	color.rgb += render(spheres, Ray(camP, camDir));
 	
 	vec4 ignitedColor = renderSun(true, vec2(.5), .1);
 	vec4 notIgnitedColor = renderSun(false, vec2(.5), .1);

@@ -618,7 +618,7 @@ vec4 render(vec3 camP, vec3 camDir)
 		color.rgb += clamp((0.7 - miscRatio), 0.0, 1.0) * cloudColor;
 	}
 
-	return color;
+	return vec4(color.rgb, 1.0);
 }
 
 
@@ -633,7 +633,7 @@ void main()
 
 	vec4 color;
 
-	const vec2 pixelResolution = vec2(1);
+	const vec2 pixelResolution = vec2(2);
 	for(int x = 0; x < pixelResolution.x; x++) 
 	{
 		for(int y = 0; y < pixelResolution.y; y++)

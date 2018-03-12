@@ -280,7 +280,7 @@ void main()
 	vec3 camP = vec3(0);
 	vec3 camDir = vec3(0);
 	
-	const vec2 pixelResolution = vec2(2);
+	const vec2 pixelResolution = vec2(8);
 	for(int x = 0; x < pixelResolution.x; x++) 
 	{
 		for(int y = 0; y < pixelResolution.y; y++)
