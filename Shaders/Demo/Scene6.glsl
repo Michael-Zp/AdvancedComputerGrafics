@@ -209,7 +209,7 @@ vec2 calcUvOnSphere(vec3 hitPoint, vec3 sphereCenter)
 
 int isAlive(vec2 uvOffset)
 {
-	return int(step(0.5, texture2D(texLastFrame0, uv + uvOffset).a ));
+	return int(step(1.5, texture2D(texLastFrame0, uv + uvOffset).a ));
 }
 
 float gameOfLive()
@@ -247,7 +247,6 @@ float gameOfLive()
 	//Check middel left and right
 	neighborsCount += isAlive(pixelSize * vec2(-1.0, 0.0));
 	neighborsCount += isAlive(pixelSize * vec2( 1.0, 0.0));
-
 
 	if(neighborsCount == 2.0)
 	{
