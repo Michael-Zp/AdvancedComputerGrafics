@@ -417,14 +417,26 @@ vec4 render(vec3 camP, vec3 camDir)
 				hitColor.rgb = waterColor / 1.1;
 				hitColor.a = 0.5;
 				
-				const float factorWater = 1.1; //1.333; //1.333 is physically correct. Looks not good tho
+				const float factorWater = 1.33; //1.333; //1.333 is physically correct. Looks not good tho
 				const float factorAir = 1.0;
 				const float factorWaterToAir = factorWater / factorAir;
+				const float factorAirToWater = factorAir / factorWater;
+
+				float refractedFactor;
+
+				if(isInWater)
+				{
+					refractedFactor = factorWaterToAir;
+				}
+				else
+				{
+					refractedFactor = factorAirToWater;
+				}
 
 				vec3 waterNormal = step(camP.y, waterLevel) * -normal +
 								   step(waterLevel, camP.y) * normal;
 
-				vec3 refractedRay = refract(camDir, waterNormal, factorWaterToAir);
+				vec3 refractedRay = refract(camDir, waterNormal, refractedFactor);
 				vec3 reflectedRay = reflect(camDir, waterNormal);
 
 
